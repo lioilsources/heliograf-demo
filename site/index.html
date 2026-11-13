@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="mobile-layer" content="off">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Heliograf (demo)</title>
+<style>
+  :root { --bg: #05070c; --fg: #e8e4da; --muted: #9a958a; --sun: #f2a33a; --line: #262a33; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); }
+  body { font: 17px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+         padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 32px max(16px, env(safe-area-inset-left)); }
+  main { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
+  h1 { margin: 8px 0 0; font-size: 1.9rem; letter-spacing: .02em; }
+  h1 span { color: var(--sun); }
+  p { margin: 0; }
+  .muted { color: var(--muted); font-size: .92rem; }
+  .latest { display: grid; gap: 8px; }
+  .latest img { width: 100%; max-width: 512px; aspect-ratio: 1; border-radius: 50%; background: #000; justify-self: center; }
+  .latest figcaption { text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .chans { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .chans a { display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+             color: var(--fg); text-decoration: none; }
+  .chans a:hover, .chans a:focus-visible { border-color: var(--sun); }
+  .chans b { display: block; color: var(--sun); }
+  a { color: var(--sun); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Helio<span>graf</span> <small class="muted">demo</small></h1>
+  <p>Snímky koróny Slunce z koronografu LASCO C3 (sonda SOHO), jeden snímek každé 3 hodiny.
+     Toto je náhled migrace heliograf.org na GitHub Pages: posledních 7 dní, denně se doplňuje z NASA.</p>
+
+  <figure class="latest" id="latest" hidden>
+    <a href="Hg/lasco/"><img alt="Poslední snímek LASCO C3"></a>
+    <figcaption></figcaption>
+  </figure>
+
+  <nav class="chans">
+    <a href="Hg/lasco/"><b>Lasco C3</b>plné rozlišení 1024 px, šipky ← → nebo přejetí prstem</a>
+    <a href="Hg/lasco-small/"><b>Lasco 512</b>úspornější varianta pro mobilní data</a>
+  </nav>
+
+  <p class="muted">Zdroj snímků: NASA/ESA SOHO LASCO,
+    <a href="https://soho.nascom.nasa.gov/data/REPROCESSING/Completed/">soho.nascom.nasa.gov</a>.
+    Originál webu: <a href="https://heliograf.org/">heliograf.org</a>.</p>
+</main>
+<script>
+  // Latest frame from the same index the viewer uses (frames/lasco/ranges.json + month index).
+  (function () {
+    var base = 'frames/lasco/';
+    function j(u) { return fetch(u, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw r.status; return r.json(); }); }
+    j(base + 'ranges.json').then(function (r) {
+      return j(base + 'index/' + r.to.slice(0, 4) + '/' + r.to.slice(5, 7) + '.json');
+    }).then(function (m) {
+      var it = m.items[m.items.length - 1], fig = document.getElementById('latest');
+      fig.querySelector('img').src = base + it.f + '_512.jpg';
+      fig.querySelector('figcaption').textContent = 'Poslední snímek: ' + it.t.replace('T', ' ') + ' UTC';
+      fig.hidden = false;
+    }).catch(function () {});
+  })();
+</script>
+</body>
+</html>

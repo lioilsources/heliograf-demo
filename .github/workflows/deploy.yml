@@ -1,0 +1,56 @@
+# heliograf demo (plan 02 B): the last 7 days of LASCO C3 from NASA, rebuilt daily, nothing committed.
+# Frames live only in the Pages artifact and in actions/cache (so a daily run downloads just the new day).
+# Production differs: frames go to R2 (workflow frames.yml) and the archive goes back to 2023.
+name: deploy
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "40 5 * * *"        # NASA REPROCESSING fills in with a delay; once a day is enough for a demo
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pillow
+      - uses: actions/cache@v4
+        with:
+          path: build/lasco
+          key: lasco-${{ github.run_id }}
+          restore-keys: lasco-
+      - name: Frames from NASA (7 days)
+        run: python3 scripts/fetch_lasco.py --days 7 --out build/lasco --prune
+      - name: Index
+        run: |
+          mkdir -p site/frames
+          cp -R build/lasco site/frames/lasco
+          python3 scripts/gen_index.py --dir site/frames/lasco --out site/frames/lasco
+      - name: Build _site
+        env:
+          MOBILE: ${{ vars.MOBILE }}
+          PREVIEW: ${{ vars.PREVIEW }}
+          PWA: ${{ vars.PWA }}
+        run: scripts/build_site.sh _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: _site }
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

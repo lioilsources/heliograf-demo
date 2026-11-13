@@ -1,0 +1,67 @@
+/* mobile.css — additive responsive layer (GHPAGES_MIGRATION_PLAN §4.5 A).
+   Everything is inside a media query: desktop stays 1:1. Revert = remove the <link> (mobilize.py --undo). */
+
+@media (max-width: 768px) {
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    box-sizing: border-box;
+    max-width: 100vw;
+    padding: 0 16px !important;
+    margin: 0 !important;
+    font-size: 16px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  img, video, iframe, embed, object, canvas, svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  /* nothing wider than its parent: inline width:800px, class widths (.cnt960, .mapSp 670px).
+     Tables are excluded — they scroll inside themselves (below). */
+  body :not(table):not(thead):not(tbody):not(tfoot):not(tr):not(td):not(th) { max-width: 100% !important; }
+  fieldset { min-width: 0 !important; box-sizing: border-box; }   /* default min-width is min-content */
+  iframe { width: 100% !important; }
+
+  /* wide tables scroll within themselves, not the whole page */
+  table { display: block; max-width: 100%; overflow-x: auto; width: auto !important; }
+  /* fixed widths from width= attributes / inline style */
+  table[width], td[width], th[width], div[style*="width"] { width: auto !important; }
+
+  pre, code { white-space: pre-wrap; }
+  pre { overflow-x: auto; max-width: 100%; }
+
+  /* two-column layouts (CZ/EN): cells stacked.
+     Only for tables marked by mobilize.py (data-mob-stack) — data tables are not broken. */
+  table[data-mob-stack], table[data-mob-stack] > tbody,
+  table[data-mob-stack] > tbody > tr, table[data-mob-stack] > tbody > tr > td,
+  table[data-mob-stack] > tr, table[data-mob-stack] > tr > td {
+    display: block; width: auto !important; overflow-x: visible;
+  }
+
+  /* pi-alpha top bar (πα½ / B / ^) — sticky, max 44 px, touch targets */
+  .topBar { position: sticky !important; top: 0; height: auto !important; min-height: 32px; max-height: 44px;
+            margin: 0 -16px; padding: 0 8px; font-size: 18px !important; line-height: 40px; }
+  .belowTop { display: none !important; }
+  .topBar a.aMnu { display: inline-block; min-width: 40px; text-align: center; }
+  /* the main page's second fixed bar (Mirrors/Editor) assumes a fixed topBar → in page flow on mobile */
+  .topHeader { position: static !important; height: auto !important; margin: 0 -16px; padding: 0 16px; }
+  .topSpacer { display: none !important; }
+  /* its floated spans (Contact, Mirrors, top/new, Editor) wrap into a jumble → one tidy wrapping row,
+     the πα½ logo first */
+  .topHeader { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding-block: 4px; }
+  .topHeader > span { float: none !important; margin: 0 !important; }
+  .topHeader > .h1 { order: -1; position: static !important; margin: 0 !important; font-size: 150%; }
+
+  /* floated boxes (table of contents "Obsah", side panels) squeeze the text into a sliver → full width */
+  fieldset[style*="float"], div[style*="float"], table[style*="float"], table[align="right"], table[align="left"] {
+    float: none !important; margin-left: 0 !important; margin-right: 0 !important;
+  }
+
+  /* size of big downloads, so a phone user decides before tapping (mobilize.py --file-sizes) */
+  a[data-mob-size]::after { content: " (" attr(data-mob-size) ")"; color: gray; font-size: 85%; white-space: nowrap; }
+
+  /* links in dense lists: more room for a finger */
+  li { margin: 4px 0; }
+  hr[width] { width: 100% !important; }
+}

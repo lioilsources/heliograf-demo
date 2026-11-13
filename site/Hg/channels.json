@@ -1,0 +1,4 @@
+[
+ {"code": "Lasco", "name": "Lasco C3", "url": "../lasco/", "base": "../../frames/lasco", "sizes": [160, 512, 1024]},
+ {"code": "LascoSmall", "name": "Lasco 512", "url": "../lasco-small/", "base": "../../frames/lasco", "sizes": [160, 512]}
+]

@@ -1,0 +1,5 @@
+_site/
+build/
+site/frames/
+__pycache__/
+.DS_Store
