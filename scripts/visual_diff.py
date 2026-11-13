@@ -59,6 +59,8 @@ def main() -> int:
     ap.add_argument("--tolerance", type=int, default=40)
     ap.add_argument("--max-changed", type=float, default=0.0005, help="fraction of pixels (0.0005 = 0.05 %%)")
     ap.add_argument("--out", type=Path, default=Path("run") / "visual")
+    ap.add_argument("--allow-external", action="store_true",
+                    help="let pages load from other hosts (default: blocked — never hammer the original server)")
     a = ap.parse_args()
 
     pages = list(a.pages)
@@ -78,8 +80,12 @@ def main() -> int:
             br = p.chromium.launch()
             desk = br.new_context(viewport={"width": 1280, "height": 800}, device_scale_factor=1)
             mob = br.new_context(viewport={"width": MOBILE_W, "height": 740}, device_scale_factor=2, is_mobile=True, has_touch=True)
+            if not a.allow_external:
+                for ctx in (desk, mob):
+                    ctx.route("**/*", lambda r: r.continue_() if r.request.url.startswith("http://127.0.0.1") else r.abort())
             dpage, mpage = desk.new_page(), mob.new_page()
-            for url in pages:
+
+            def check(url: str) -> bool:
                 slug = url.strip("/").replace("/", "_") or "index"
                 shots = []
                 for name, base in (("before", ub), ("after", ua)):
@@ -94,23 +100,30 @@ def main() -> int:
                 mpage.goto(ua + url, wait_until="networkidle")
                 # compare with the device width: mobile Chrome widens innerWidth to fit overflowing content
                 sw = mpage.evaluate("document.documentElement.scrollWidth")
-                iw = MOBILE_W
-                mob_ok = sw <= iw
+                mob_ok = sw <= MOBILE_W
                 if not mob_ok:
                     mpage.screenshot(path=a.out / f"{slug}_mobile_after.png", full_page=False)
                 if desk_ok:
                     for s in shots:
                         s.unlink()
-                status = "OK  " if desk_ok and mob_ok else "FAIL"
-                failed += not (desk_ok and mob_ok)
-                print(f"{status} {url:28} desktop změna {frac * 100:6.3f} %{'' if desk_ok else f' bbox={bbox}'}"
-                      f" | mobil scrollWidth {sw}/{iw}{'' if mob_ok else ' ← horizontální scroll'}")
+                print(f"{'OK  ' if desk_ok and mob_ok else 'FAIL'} {url:28} desktop změna {frac * 100:6.3f} %"
+                      f"{'' if desk_ok else f' bbox={bbox}'}"
+                      f" | mobil scrollWidth {sw}/{MOBILE_W}{'' if mob_ok else ' ← horizontální scroll'}", flush=True)
+                return desk_ok and mob_ok
+
+            for url in pages:
+                try:
+                    failed += not check(url)
+                except Exception as e:                      # one broken page must not stop a 400-page run
+                    failed += 1
+                    print(f"FAIL {url:28} chyba: {str(e).splitlines()[0][:120]}")
             br.close()
     finally:
         pb.terminate()
         pa.terminate()
     print(f"\n{len(pages) - failed}/{len(pages)} stránek OK" + (f", detaily v {a.out}" if failed else ""))
     return 1 if failed else 0
+
 
 
 if __name__ == "__main__":

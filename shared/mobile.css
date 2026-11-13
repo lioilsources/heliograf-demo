@@ -19,7 +19,21 @@
   }
   /* nothing wider than its parent: inline width:800px, class widths (.cnt960, .mapSp 670px).
      Tables are excluded — they scroll inside themselves (below). */
-  body :not(table):not(thead):not(tbody):not(tfoot):not(tr):not(td):not(th) { max-width: 100% !important; }
+  body :not(table):not(thead):not(tbody):not(tfoot):not(tr):not(td):not(th) { max-width: 100% !important; box-sizing: border-box; }
+  /* border-box: width:100% + padding + border (8kun archive div.thread) stays inside its parent */
+
+  /* a float next to another float runs off the screen → each float on its own line */
+  [style*="float:"], [style*="float: "] { clear: both; }
+  /* one-row flex galleries (Countdown: flex-flow:row nowrap with two 460px images) wrap */
+  [style*="display:flex"], [style*="display: flex"] { flex-wrap: wrap !important; }
+  /* rows kept on one line on desktop (image galleries with white-space:nowrap) wrap on a phone */
+  div[style*="nowrap"], p[style*="nowrap"], span[style*="nowrap"] { white-space: normal !important; }
+  /* discussion threads indent each reply level with an absolute padding-left (96…324 px) → small indent */
+  div[style*="padding-left"]:not([style*="padding-left:0"]):not([style*="padding-left: 0"]) {
+    padding-left: min(24px, 6vw) !important;
+  }
+  /* Sc26/Video play counters sit 3em right of their box */
+  .playCnt { right: 2px !important; }
   fieldset { min-width: 0 !important; box-sizing: border-box; }   /* default min-width is min-content */
   iframe { width: 100% !important; }
 

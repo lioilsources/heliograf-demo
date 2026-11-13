@@ -5,7 +5,8 @@ A file goes to assets when:
   - it has a "heavy" extension (zip, pdf, mp4, …) and is also > --min-heavy (default 0 = always), or
   - it is larger than --threshold (default 1 MB), or
   - --force-glob lists it.
-HTML/CSS/JS always stay in the repo.
+HTML/CSS/JS always stay in the repo, and so does anything matching --keep-glob: files whose URL is built
+in JavaScript (pi-alpha `cz/Volby2025/*` builds `file+'.svg'`, `Sc26/Video/*`) cannot be rewritten to R2.
 
 Output: assets-map.json  {"Climate/foo.zip": "https://assets.pi-alpha.org/Climate/foo.zip", ...}
 Without --apply only prints the plan (dry-run). With --apply MOVES files from <src> to <assets>.
@@ -39,6 +40,8 @@ def human(n: float) -> str:
 
 def classify(rel: str, size: int, a) -> str | None:
     ext = Path(rel).suffix.lower()
+    if any(fnmatch.fnmatch(rel, g) for g in a.keep_glob):
+        return None
     if any(fnmatch.fnmatch(rel, g) for g in a.force_glob):
         return "forced"
     if ext in KEEP_EXT or ext == "":
@@ -59,6 +62,7 @@ def main() -> int:
     ap.add_argument("--threshold", type=int, default=1024 * 1024)
     ap.add_argument("--min-heavy", type=int, default=0)
     ap.add_argument("--force-glob", action="append", default=[])
+    ap.add_argument("--keep-glob", action="append", default=[], help="stays in the repo (URL built in JS)")
     ap.add_argument("--sizes", type=Path, help="write {path: bytes} of moved files (for mobilize --file-sizes)")
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
