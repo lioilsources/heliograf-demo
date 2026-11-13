@@ -55,9 +55,10 @@
       return j(base + 'index/' + r.to.slice(0, 4) + '/' + r.to.slice(5, 7) + '.json');
     }).then(function (m) {
       var it = m.items[m.items.length - 1], fig = document.getElementById('latest');
-      fig.querySelector('img').src = base + it.f + '_512.jpg';
+      var img = fig.querySelector('img');
+      img.onload = function () { fig.hidden = false; };      // no empty black disc while loading
+      img.src = base + it.f + '_512.jpg';
       fig.querySelector('figcaption').textContent = 'Poslední snímek: ' + it.t.replace('T', ' ') + ' UTC';
-      fig.hidden = false;
     }).catch(function () {});
   })();
 </script>
